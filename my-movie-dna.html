@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 一千零一帧</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Playfair+Display:wght@700;900&display=swap');
+:root{
+  --bg:#07080f;--surface:rgba(255,255,255,.03);--surface-h:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.06);--text:#e8e8ef;--dim:#7a7a96;
+  --coral:#ff6b6b;--amber:#fbbf24;--sky:#38bdf8;--violet:#a78bfa;
+  --mint:#34d399;--peach:#fb923c;--rose:#f472b6;
+  --wg:linear-gradient(135deg,#ff6b6b,#fbbf24);--cg:linear-gradient(135deg,#38bdf8,#a78bfa);
+  --ng:linear-gradient(135deg,#f472b6,#a78bfa 40%,#38bdf8);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;overflow-x:hidden;line-height:1.6}
+
+/* Ambient */
+.ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:.1;animation:bf 20s ease-in-out infinite alternate}
+.b1{width:600px;height:600px;background:#ff6b6b;top:-200px;left:-100px}
+.b2{width:500px;height:500px;background:#38bdf8;top:40%;right:-150px;animation-delay:-7s}
+.b3{width:400px;height:400px;background:#a78bfa;bottom:-100px;left:30%;animation-delay:-14s}
+@keyframes bf{0%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}100%{transform:translate(10px,-20px) scale(1.02)}}
+
+/* Stars */
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.star{position:absolute;background:#fff;border-radius:50%;animation:tw var(--d) ease-in-out infinite;animation-delay:var(--dl)}
+@keyframes tw{0%,100%{opacity:.15}50%{opacity:.8}}
+
+/* Layout */
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 100px}
+
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;background:rgba(7,8,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 0}
+.nav-in{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:900;font-size:18px;background:var(--wg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-links{display:flex;gap:6px;font-size:12px;flex-wrap:wrap;justify-content:flex-end;max-width:70%}
+.nav-links a{color:var(--dim);text-decoration:none;transition:color .3s;padding:4px 8px;border-radius:6px;white-space:nowrap}
+.nav-links a:hover{color:var(--coral);background:rgba(255,107,107,.08)}
+
+/* Hero */
+.hero{text-align:center;padding:80px 0 48px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);border-radius:100px;padding:8px 20px;font-size:12px;color:var(--coral);letter-spacing:3px;margin-bottom:28px}
+.hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--coral);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hero h1{font-family:'Playfair Display','Noto Sans SC',serif;font-size:clamp(40px,7vw,72px);font-weight:900;background:var(--ng);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shim 6s ease infinite;line-height:1.1;margin-bottom:16px}
+@keyframes shim{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.hero-sub{font-size:17px;color:var(--dim);font-weight:300;letter-spacing:1px;margin-bottom:40px}
+.stats-row{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+.stat-chip{display:flex;flex-direction:column;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 24px;min-width:120px;transition:all .4s cubic-bezier(.16,1,.3,1)}
+.stat-chip:hover{background:var(--surface-h);transform:translateY(-4px)}
+.stat-chip .v{font-size:34px;font-weight:900;background:var(--wg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.stat-chip .l{font-size:12px;color:var(--dim);margin-top:6px;letter-spacing:1px}
+
+/* Sections */
+.sec{margin-top:56px}
+.sec-h{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.sec-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sec-h h2{font-size:22px;font-weight:700}
+.sec-h .sub{font-size:14px;color:var(--dim);margin-left:8px;font-weight:400}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px;backdrop-filter:blur(12px);transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,107,107,.3),transparent);opacity:0;transition:opacity .4s}
+.card:hover{background:var(--surface-h);border-color:rgba(255,255,255,.1)}
+.card:hover::after{opacity:1}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:768px){.g2,.g3{grid-template-columns:1fr}}
+
+/* Persona */
+.persona{text-align:center;padding:40px 20px}
+.persona-label{font-size:12px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+.persona-title{font-size:clamp(28px,5vw,44px);font-weight:900;background:var(--ng);background-size:300% 300%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shim 5s ease infinite;margin-bottom:16px}
+.persona-desc{font-size:15px;color:var(--dim);max-width:560px;margin:0 auto;line-height:2}
+.persona-tags{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:24px}
+.persona-tag{padding:6px 16px;border-radius:100px;font-size:13px;border:1px solid var(--border);color:var(--dim);background:rgba(255,255,255,.02);transition:all .3s;cursor:pointer}
+.persona-tag:hover{border-color:rgba(255,107,107,.3);color:var(--coral)}
+
+/* Mood */
+.mood-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:600px){.mood-grid{grid-template-columns:repeat(2,1fr)}}
+.mood-card{text-align:center;padding:24px 12px;border-radius:20px;background:rgba(255,255,255,.015);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;cursor:pointer}
+.mood-card:hover{transform:translateY(-6px) scale(1.02);background:rgba(255,255,255,.04)}
+.mood-card .emoji{font-size:40px;margin-bottom:8px;display:block;transition:transform .3s}
+.mood-card:hover .emoji{transform:scale(1.2) rotate(-5deg)}
+.mood-card .name{font-size:14px;font-weight:600;margin-bottom:4px}
+.mood-card .count{font-size:32px;font-weight:900;line-height:1}
+.mood-card .pct{font-size:11px;color:var(--dim);margin-top:4px}
+.mood-card .bar-bg{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.03)}
+.mood-card .bar-fill{height:100%;border-radius:0 0 20px 20px;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.mood-card.active{border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.05)}
+
+/* Mood result panel */
+.mood-result{margin-top:16px;padding:24px;border-radius:16px;background:rgba(255,107,107,.04);border:1px solid rgba(255,107,107,.12);display:none}
+.mood-result.show{display:block;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.mood-result h3{font-size:16px;margin-bottom:12px;color:var(--coral)}
+.mood-movies{display:flex;flex-wrap:wrap;gap:8px}
+.mood-movie{padding:6px 14px;border-radius:10px;font-size:13px;background:rgba(255,255,255,.04);border:1px solid var(--border);transition:all .3s;cursor:default}
+.mood-movie:hover{background:rgba(255,255,255,.08);transform:translateY(-2px)}
+
+/* Top10 */
+.rank-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;transition:all .3s;cursor:default}
+.rank-item:hover{background:rgba(255,255,255,.03)}
+.rank-badge{width:32px;height:32px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
+.rank-badge.g1{background:linear-gradient(135deg,#fbbf24,#f97316);color:#1a1a2e}
+.rank-badge.g2{background:linear-gradient(135deg,#d1d5db,#9ca3af);color:#1a1a2e}
+.rank-badge.g3{background:linear-gradient(135deg,#d97706,#b45309);color:#fff}
+.rank-badge.g0{background:rgba(255,255,255,.05);color:var(--dim)}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-meta{font-size:12px;color:var(--dim);margin-top:2px}
+.rank-score{font-weight:900;font-size:22px;flex-shrink:0;background:var(--wg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Director */
+.dir-card{padding:20px;border-radius:18px;background:rgba(255,255,255,.015);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1)}
+.dir-card:hover{background:rgba(255,255,255,.05);transform:translateY(-3px)}
+.dir-name{font-weight:700;font-size:16px;margin-bottom:2px}
+.dir-sub{font-size:12px;color:var(--dim)}
+.dir-bar{height:5px;border-radius:3px;margin-top:12px;background:rgba(255,255,255,.04);overflow:hidden}
+.dir-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+
+/* Fact cards */
+.fact-card{padding:28px;border-radius:20px;background:rgba(255,255,255,.015);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1);cursor:pointer}
+.fact-card:hover{background:rgba(255,255,255,.05);transform:translateY(-4px)}
+.fact-icon{font-size:36px;margin-bottom:12px;display:block}
+.fact-label{font-size:13px;color:var(--dim);margin-bottom:4px}
+.fact-value{font-size:32px;font-weight:900;background:var(--wg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+.fact-desc{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.6}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.tag{padding:8px 18px;border-radius:100px;font-size:13px;font-weight:500;border:1px solid;transition:all .3s;cursor:pointer}
+.tag:hover{transform:translateY(-2px) scale(1.05)}
+
+/* Chart */
+.chart{width:100%;height:380px}
+.chart-sm{width:100%;height:300px}
+
+/* ===== QUOTE CAROUSEL ===== */
+.quote-carousel{position:relative;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.quote-card{display:none;flex-direction:row;align-items:center;gap:32px;text-align:left;animation:fadeUp .6s ease;padding:16px 0}
+.quote-card .quote-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.quote-card .quote-right{display:flex;flex-direction:column;justify-content:center}
+@media(max-width:600px){.quote-card{flex-direction:column;text-align:center;gap:20px}.quote-card .quote-left{align-items:center}.quote-card .quote-right{align-items:center}}
+.quote-card.active{display:flex}
+.quote-movie-poster{width:120px;height:168px;border-radius:12px;margin-bottom:20px;overflow:hidden;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.5);flex-shrink:0;border:2px solid rgba(255,255,255,.08)}
+.quote-movie-poster img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+.quote-card:hover .quote-movie-poster img{transform:scale(1.08)}
+.quote-movie-poster .poster-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:11px;font-weight:700;text-align:center;color:#fff;letter-spacing:1px}
+.quote-mark{font-size:64px;line-height:.5;color:rgba(255,107,107,.15);font-family:Georgia,serif;margin-bottom:8px}
+.quote-text{font-size:20px;font-weight:300;font-style:italic;line-height:2;color:var(--text);max-width:580px;margin-bottom:16px}
+.quote-movie-name{font-size:14px;color:var(--coral);font-weight:600}
+.quote-movie-meta{font-size:12px;color:var(--dim);margin-top:4px}
+.quote-nav{display:flex;gap:12px;margin-top:24px;align-items:center}
+.quote-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center}
+.quote-btn:hover{background:var(--surface-h);border-color:rgba(255,107,107,.3);color:var(--coral)}
+.quote-dots{display:flex;gap:6px}
+.quote-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .3s;cursor:pointer}
+.quote-dot.active{background:var(--coral);transform:scale(1.3)}
+
+/* ===== MOOD QUIZ ===== */
+.quiz-container{padding:20px}
+.quiz-question{font-size:18px;font-weight:600;text-align:center;margin-bottom:24px;line-height:1.6}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.quiz-opt{padding:16px 20px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.02);cursor:pointer;transition:all .4s cubic-bezier(.16,1,.3,1);text-align:center;font-size:15px}
+.quiz-opt:hover{background:rgba(255,255,255,.06);transform:translateY(-3px);border-color:rgba(255,107,107,.2)}
+.quiz-opt.selected{background:rgba(255,107,107,.1);border-color:var(--coral);color:var(--coral)}
+.quiz-result{display:none;text-align:center;padding:24px;animation:fadeUp .5s ease}
+.quiz-result.show{display:block}
+.quiz-result-emoji{font-size:64px;margin-bottom:16px}
+.quiz-result-text{font-size:18px;font-weight:600;margin-bottom:8px}
+.quiz-result-desc{font-size:14px;color:var(--dim);line-height:1.8;max-width:500px;margin:0 auto}
+.quiz-result-movies{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.quiz-restart{margin-top:20px;padding:10px 24px;border-radius:100px;border:1px solid var(--coral);background:transparent;color:var(--coral);font-size:14px;cursor:pointer;transition:all .3s}
+.quiz-restart:hover{background:rgba(255,107,107,.1)}
+
+/* ===== SCENE CARDS ===== */
+.scene-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.scene-card{border-radius:20px;overflow:hidden;background:rgba(255,255,255,.015);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1);cursor:pointer;position:relative}
+.scene-card:hover{transform:translateY(-4px);background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+.scene-card .scene-bg{position:absolute;inset:0;opacity:.18;background-size:cover;background-position:center;transition:opacity .4s;filter:blur(1px)}
+.scene-card:hover .scene-bg{opacity:.28}
+.scene-card .scene-content{position:relative;z-index:1}
+.scene-header{padding:20px 20px 0;display:flex;align-items:center;gap:12px}
+.scene-poster{width:44px;height:62px;border-radius:8px;overflow:hidden;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.scene-poster img{width:100%;height:100%;object-fit:cover}
+.scene-emoji{font-size:32px}
+.scene-movie{font-weight:700;font-size:16px}
+.scene-year{font-size:12px;color:var(--dim)}
+.scene-body{padding:16px 20px}
+.scene-title{font-weight:600;font-size:14px;color:var(--amber);margin-bottom:8px}
+.scene-desc{font-size:13px;color:var(--dim);line-height:1.8}
+.scene-quote{padding:12px 20px 20px;font-style:italic;font-size:14px;color:var(--coral);border-top:1px solid var(--border);margin-top:12px;display:none}
+.scene-card.expanded .scene-quote{display:block;animation:fadeUp .4s ease}
+.scene-toggle{padding:8px 20px 16px;font-size:12px;color:var(--sky);cursor:pointer;transition:color .3s}
+.scene-toggle:hover{color:var(--coral)}
+
+/* ===== MOVIE EXPLORER ===== */
+.explorer-search{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.explorer-input{flex:1;min-width:200px;padding:12px 18px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .3s}
+.explorer-input:focus{border-color:rgba(255,107,107,.3)}
+.explorer-input::placeholder{color:var(--dim)}
+.explorer-filter{padding:8px 16px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:13px;cursor:pointer;transition:all .3s;font-family:inherit}
+.explorer-filter:hover,.explorer-filter.active{border-color:rgba(255,107,107,.3);color:var(--coral);background:rgba(255,107,107,.05)}
+.explorer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;max-height:500px;overflow-y:auto;padding-right:8px}
+.explorer-grid::-webkit-scrollbar{width:4px}
+.explorer-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.movie-tile{padding:16px;border-radius:14px;background:rgba(255,255,255,.02);border:1px solid var(--border);transition:all .3s;cursor:pointer}
+.movie-tile:hover{background:rgba(255,255,255,.06);transform:translateY(-2px)}
+.movie-tile .name{font-weight:600;font-size:14px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.movie-tile .meta{font-size:12px;color:var(--dim)}
+.movie-tile .rating{font-weight:900;font-size:18px;margin-top:6px;display:inline-block}
+.movie-tile .genre-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;margin-right:4px;margin-top:4px;background:rgba(255,255,255,.04);color:var(--dim)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.show{display:flex;animation:fadeUp .3s ease}
+.modal{background:#0f1020;border:1px solid var(--border);border-radius:24px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:32px;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.modal-close:hover{background:var(--surface-h);color:var(--coral)}
+.modal-emoji{font-size:48px;margin-bottom:12px}
+.modal-name{font-size:22px;font-weight:700;margin-bottom:4px}
+.modal-meta{font-size:13px;color:var(--dim);margin-bottom:16px}
+.modal-synopsis{font-size:14px;color:var(--dim);line-height:1.8;margin-bottom:16px}
+.modal-quote{font-style:italic;color:var(--coral);font-size:15px;padding:16px;border-radius:12px;background:rgba(255,107,107,.04);border:1px solid rgba(255,107,107,.1);line-height:1.8}
+
+/* Reveal */
+.reveal{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.reveal.show{opacity:1;transform:translateY(0)}
+
+/* Foot */
+.foot{text-align:center;padding:48px 0 24px;color:var(--dim);font-size:13px}
+.foot .emo{font-size:24px;margin-bottom:8px}
+
+/* Tape */
+.tape{display:flex;gap:4px;overflow:hidden;margin:20px 0;padding:8px 0}
+.tape-item{flex-shrink:0;padding:6px 14px;border-radius:8px;font-size:11px;color:var(--dim);background:rgba(255,255,255,.02);border:1px solid var(--border);white-space:nowrap;animation:ts 60s linear infinite}
+@keyframes ts{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+
+<div class="ambient"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="stars" id="stars"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="nav-in">
+    <div class="nav-logo">🎬 CINEMA DNA</div>
+    <div class="nav-links">
+      <a href="#personality">观影人格</a>
+      <a href="#mood">情绪地图</a>
+      <a href="#quotes">经典台词</a>
+      <a href="#scenes">场景重温</a>
+      <a href="#genre-charts">类型雷达</a>
+      <a href="#quiz">此刻心境</a>
+      <a href="#top10">影单天花板</a>
+      <a href="#timeline">时光轴</a>
+      <a href="#directors">灵魂导演</a>
+      <a href="#explorer">我的片库</a>
+      <a href="#facts">观影冷知识</a>
+      <a href="#tags">观影标签云</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <!-- HERO -->
+  <section class="hero reveal">
+    <div class="hero-eyebrow"><span class="dot"></span>CINEMA DNA</div>
+    <h1>一千零一帧</h1>
+    <div class="hero-sub">101 部电影，101 段平行人生，一帧一帧拼出你的灵魂</div>
+    <div class="stats-row">
+      <div class="stat-chip"><div class="v">101</div><div class="l">已观影</div></div>
+      <div class="stat-chip"><div class="v">8.1</div><div class="l">均分</div></div>
+      <div class="stat-chip"><div class="v">22</div><div class="l">类型</div></div>
+      <div class="stat-chip"><div class="v">9.7</div><div class="l">最高分</div></div>
+      <div class="stat-chip"><div class="v">30.7%</div><div class="l">9分+占比</div></div>
+    </div>
+    <div class="tape" id="tape"></div>
+  </section>
+
+  <!-- PERSONALITY -->
+  <section class="sec reveal" id="personality">
+    <div class="card">
+      <div class="persona">
+        <div class="persona-label">你的观影人格</div>
+        <div class="persona-title">温暖理想主义者</div>
+        <div class="persona-desc">你用 8.1 的均分过滤世界——拒绝平庸，却对真诚毫无抵抗力。<br>剧情片是你的母语，喜剧是你的呼吸，动画片是藏在口袋里的童心。<br>你在光影里寻找的不是刺激，是「值得相信的什么东西」。</div>
+        <div class="persona-tags">
+          <span class="persona-tag">品味严苛</span><span class="persona-tag">内心柔软</span>
+          <span class="persona-tag">剧情为骨</span><span class="persona-tag">喜剧为翼</span>
+          <span class="persona-tag">动画是秘密花园</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOOD MAP -->
+  <section class="sec reveal" id="mood">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(255,107,107,.1)">🎭</div><h2>情绪地图<span class="sub">点击一种心情，看看属于它的电影</span></h2></div>
+    <div class="card">
+      <div class="mood-grid" id="moodGrid"></div>
+      <div class="mood-result" id="moodResult"></div>
+    </div>
+  </section>
+
+  <!-- QUOTES -->
+  <section class="sec reveal" id="quotes">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(251,191,36,.1)">💬</div><h2>经典台词<span class="sub">那些你愿意重温的灵魂切片</span></h2></div>
+    <div class="card">
+      <div class="quote-carousel" id="quoteCarousel"></div>
+    </div>
+  </section>
+
+  <!-- SCENES -->
+  <section class="sec reveal" id="scenes">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(56,189,248,.1)">🎬</div><h2>场景重温<span class="sub">点击展开，回到那个瞬间</span></h2></div>
+    <div class="scene-grid" id="sceneGrid"></div>
+  </section>
+
+  <!-- GENRE CHARTS -->
+  <section class="sec reveal" id="genre-charts">
+    <div class="g2">
+      <div class="card"><div class="sec-h"><div class="sec-ico" style="background:rgba(56,189,248,.1)">🎯</div><h2>类型雷达</h2></div><div class="chart" id="radarChart"></div></div>
+      <div class="card"><div class="sec-h"><div class="sec-ico" style="background:rgba(251,191,36,.1)">⭐</div><h2>评分分布</h2></div><div class="chart" id="ratingChart"></div></div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="sec reveal" id="quiz">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(167,139,250,.1)">🔮</div><h2>此刻心境<span class="sub">告诉我你现在的心情，推荐一部对味的电影</span></h2></div>
+    <div class="card">
+      <div class="quiz-container" id="quizContainer"></div>
+    </div>
+  </section>
+
+  <!-- TOP10 -->
+  <section class="sec reveal" id="top10">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(251,191,36,.1)">🏆</div><h2>影单天花板<span class="sub">Top 10</span></h2></div>
+    <div class="g2">
+      <div class="card" id="topLeft"></div>
+      <div class="card" id="topRight"></div>
+    </div>
+  </section>
+
+  <!-- TIMELINE + REGION -->
+  <section class="sec reveal" id="timeline">
+    <div class="g2">
+      <div class="card"><div class="sec-h"><div class="sec-ico" style="background:rgba(167,139,250,.1)">🕰️</div><h2>时光轴</h2></div><div class="chart-sm" id="timelineChart"></div></div>
+      <div class="card"><div class="sec-h"><div class="sec-ico" style="background:rgba(52,211,153,.1)">🌏</div><h2>中外片源</h2></div><div class="chart-sm" id="regionChart"></div></div>
+    </div>
+  </section>
+
+  <!-- DIRECTORS -->
+  <section class="sec reveal" id="directors">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(56,189,248,.1)">🎬</div><h2>灵魂导演</h2></div>
+    <div class="g3" id="dirGrid"></div>
+  </section>
+
+  <!-- EXPLORER -->
+  <section class="sec reveal" id="explorer">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(244,114,182,.1)">🔍</div><h2>我的片库<span class="sub">点击任意电影查看详情</span></h2></div>
+    <div class="card">
+      <div class="explorer-search">
+        <input class="explorer-input" id="searchInput" placeholder="搜索电影名、导演、类型…" oninput="filterMovies()">
+        <button class="explorer-filter active" onclick="setFilter(this,'all')">全部</button>
+        <button class="explorer-filter" onclick="setFilter(this,'9+')">9分+</button>
+        <button class="explorer-filter" onclick="setFilter(this,'动画')">动画</button>
+        <button class="explorer-filter" onclick="setFilter(this,'喜剧')">喜剧</button>
+        <button class="explorer-filter" onclick="setFilter(this,'科幻')">科幻</button>
+      </div>
+      <div class="explorer-grid" id="explorerGrid"></div>
+    </div>
+  </section>
+
+  <!-- FACTS -->
+  <section class="sec reveal" id="facts">
+    <div class="sec-h"><div class="sec-ico" style="background:rgba(251,191,36,.1)">🎲</div><h2>观影冷知识</h2></div>
+    <div class="g3" id="factGrid"></div>
+  </section>
+
+  <!-- TAGS -->
+  <section class="sec reveal" id="tags">
+    <div class="card">
+      <div class="sec-h"><div class="sec-ico" style="background:rgba(167,139,250,.1)">🏷️</div><h2>观影标签云</h2></div>
+      <div class="tags" id="tagCloud"></div>
+    </div>
+  </section>
+
+  <div class="foot"><div class="emo">🎬🍿✨</div><div>基于 101 部观影数据生成 · 你的光影宇宙</div></div>
+</div>
+
+<script>
+// ===== DATA =====
+const allMovies=[
+{name:'肖申克的救赎',year:1994,genre:'剧情',rating:9.7,director:'弗兰克·德拉邦特',region:'intl',synopsis:'银行家安迪冤狱19年，用小石锤凿穿墙壁奔向自由'},
+{name:'霸王别姬',year:1993,genre:'剧情,爱情',rating:9.6,director:'陈凯歌',region:'cn',synopsis:'程蝶衣戏假情真，从一而终，以虞姬之剑了断一生'},
+{name:'阿甘正传',year:1994,genre:'剧情,爱情',rating:9.5,director:'罗伯特·泽米吉斯',region:'intl',synopsis:'智商75的阿甘，用奔跑丈量了半个美国史'},
+{name:'泰坦尼克号',year:1997,genre:'剧情,爱情',rating:9.5,director:'詹姆斯·卡梅隆',region:'intl',synopsis:'穷画家与贵族少女在冰海上的永恒爱情'},
+{name:'千与千寻',year:2001,genre:'动画,奇幻',rating:9.4,director:'宫崎骏',region:'intl',synopsis:'10岁少女在神隐世界找回名字与成长'},
+{name:'星际穿越',year:2014,genre:'科幻,剧情',rating:9.4,director:'克里斯托弗·诺兰',region:'intl',synopsis:'父女隔五维空间对话，爱是唯一超越维度的力量'},
+{name:'忠犬八公的故事',year:2009,genre:'剧情',rating:9.4,director:'莱塞·霍尔斯道姆',region:'intl',synopsis:'秋田犬八公在车站守候九年，等一个再不会回来的人'},
+{name:'盗梦空间',year:2010,genre:'科幻,悬疑',rating:9.3,director:'克里斯托弗·诺兰',region:'intl',synopsis:'在梦境的层层嵌套中植入一个想法'},
+{name:'楚门的世界',year:1998,genre:'剧情,喜剧',rating:9.3,director:'彼得·威尔',region:'intl',synopsis:'楚门用了30年发现全世界都在看他直播'},
+{name:'放牛班的春天',year:2004,genre:'剧情,音乐',rating:9.3,director:'克里斯托夫·巴拉蒂',region:'intl',synopsis:'落魄音乐家用合唱团拯救了一群问题少年'},
+{name:'机器人总动员',year:2008,genre:'动画,科幻',rating:9.3,director:'安德鲁·斯坦顿',region:'intl',synopsis:'地球上最后一个小机器人的笨拙爱情'},
+{name:'海蒂和爷爷',year:2015,genre:'剧情,家庭',rating:9.3,director:'阿兰·葛斯彭纳',region:'intl',synopsis:'阿尔卑斯山上的纯真融化了所有冰'},
+{name:'末代皇帝',year:1987,genre:'剧情,传记',rating:9.2,director:'贝纳尔多·贝托鲁奇',region:'intl',synopsis:'三岁登基的溥仪，60年沧桑浓缩中国近代史'},
+{name:'疯狂动物城',year:2016,genre:'动画,喜剧',rating:9.2,director:'拜恩·霍华德',region:'intl',synopsis:'兔子朱迪证明任何人都能成为任何样子'},
+{name:'触不可及',year:2011,genre:'剧情,喜剧',rating:9.2,director:'奥利维·那卡什',region:'intl',synopsis:'黑人护工与瘫痪富翁的奇妙友谊'},
+{name:'当幸福来敲门',year:2006,genre:'剧情,传记',rating:9.1,director:'加布里埃莱·穆奇诺',region:'intl',synopsis:'流浪公厕的父子，敲开了幸福之门'},
+{name:'哈尔的移动城堡',year:2004,genre:'动画,奇幻',rating:9.1,director:'宫崎骏',region:'intl',synopsis:'被诅咒变老的少女与移动城堡里的魔法少年'},
+{name:'怦然心动',year:2010,genre:'剧情,爱情',rating:9.1,director:'罗伯·莱纳',region:'intl',synopsis:'有些人浅薄，有些人金玉其外败絮其中，但总有人如彩虹般绚烂'},
+{name:'死亡诗社',year:1989,genre:'剧情',rating:9.1,director:'彼得·威尔',region:'intl',synopsis:'基汀老师教学生们"抓住今天"，用诗歌对抗平庸'},
+{name:'何以为家',year:2018,genre:'剧情',rating:9.1,director:'娜丁·拉巴菲',region:'intl',synopsis:'12岁男孩状告父母"生而不养"，一双眼睛戳破文明的虚伪'},
+{name:'飞屋环游记',year:2009,genre:'动画,冒险',rating:9.1,director:'彼特·道格特',region:'intl',synopsis:'78岁老爷爷用气球带着房子飞向天堂瀑布'},
+{name:'三傻大闹宝莱坞',year:2009,genre:'剧情,喜剧',rating:9.1,director:'拉吉库马尔·希拉尼',region:'intl',synopsis:'三个叛逆大学生对抗填鸭教育的疯狂冒险'},
+{name:'寻梦环游记',year:2017,genre:'动画,音乐',rating:9.0,director:'李·昂克里奇',region:'intl',synopsis:'亡灵世界的冒险，记住你的人不会让你真正消失'},
+{name:'摔跤吧！爸爸',year:2016,genre:'剧情,运动',rating:9.0,director:'涅提·蒂瓦里',region:'intl',synopsis:'父女打破印度女性宿命，从泥地摔到金牌'},
+{name:'狮子王（1994）',year:1994,genre:'动画,剧情',rating:9.0,director:'罗伯·明可夫',region:'intl',synopsis:'辛巴从逃避到归来，哈库那玛塔塔到荣耀大地'},
+{name:'我不是药神',year:2018,genre:'剧情',rating:9.0,director:'文牧野',region:'cn',synopsis:'卖神油的程勇从印度走私仿制药，成了病患的救世主'},
+{name:'一个叫欧维的男人决定去死',year:2015,genre:'剧情,喜剧',rating:9.0,director:'汉内斯·霍尔姆',region:'intl',synopsis:'固执老头屡次自杀失败，因为邻居总来打扰'},
+{name:'我爱你（韩国）',year:2011,genre:'剧情,爱情',rating:9.0,director:'秋昌民',region:'intl',synopsis:'老年人的黄昏恋，比任何青春爱情都滚烫'},
+{name:'哈利波特全系列',year:2001,genre:'奇幻,冒险',rating:9.0,director:'克里斯·哥伦布 等',region:'intl',synopsis:'大难不死的男孩与魔法世界的七年'},
+{name:'哪吒之魔童降世',year:2019,genre:'动画,奇幻',rating:8.4,director:'饺子',region:'cn',synopsis:'我命由我不由天'},
+{name:'流浪地球',year:2019,genre:'科幻,冒险',rating:8.5,director:'郭帆',region:'cn',synopsis:'推动地球逃离太阳系，中国人的宇宙流浪'},
+{name:'你的名字',year:2016,genre:'动画,爱情',rating:8.5,director:'新海诚',region:'intl',synopsis:'跨越时空交换身体的少年少女'},
+{name:'冰雪奇缘',year:2013,genre:'动画,音乐',rating:8.5,director:'克里斯·巴克',region:'intl',synopsis:'Let It Go，爱与自由无需隐藏'},
+{name:'少年的你',year:2019,genre:'剧情,青春',rating:8.2,director:'曾国祥',region:'cn',synopsis:'你保护世界，我保护你'},
+{name:'社交网络',year:2010,genre:'剧情,传记',rating:8.2,director:'大卫·芬奇',region:'intl',synopsis:'扎克伯格用代码创造了社交帝国，却失去了朋友'},
+{name:'年会不能停',year:2023,genre:'喜剧',rating:8.2,director:'董润年',region:'cn',synopsis:'钳工误入总部，年会揭黑幕，戳破职场荒诞'},
+{name:'好东西',year:2024,genre:'剧情,女性',rating:8.1,director:'邵艺辉',region:'cn',synopsis:'三个女性重新定义"好东西"的样子'},
+{name:'蒂凡尼的早餐',year:1961,genre:'剧情,爱情',rating:8.1,director:'布莱克·爱德华兹',region:'intl',synopsis:'小黑裙与牛角包，霍莉对抗孤独的仪式'},
+{name:'罗小黑战记',year:2019,genre:'动画,奇幻',rating:8.1,director:'MTJJ',region:'cn',synopsis:'猫妖小黑的温暖奇幻冒险'},
+{name:'周处除三害',year:2024,genre:'动作,犯罪',rating:8.1,director:'黄精甫',region:'cn',synopsis:'通缉犯除掉排他前面的两个通缉犯'},
+{name:'绿皮书',year:2018,genre:'剧情,喜剧',rating:8.9,director:'彼得·法拉利',region:'intl',synopsis:'黑人钢琴家与白人司机的南方公路之旅'},
+{name:'本杰明·巴顿奇事',year:2008,genre:'剧情,奇幻',rating:8.9,director:'大卫·芬奇',region:'intl',synopsis:'逆生长的男人，在时间的河流中逆行去爱'},
+{name:'七宗罪',year:1995,genre:'悬疑,犯罪',rating:8.8,director:'大卫·芬奇',region:'intl',synopsis:'七宗罪七具尸体，最恐怖的是最后一宗'},
+{name:'蝙蝠侠：黑暗骑士崛起',year:2012,genre:'动作,科幻',rating:8.8,director:'克里斯托弗·诺兰',region:'intl',synopsis:'哥谭的黑暗骑士最后的崛起'},
+{name:'遗愿清单',year:2007,genre:'剧情,喜剧',rating:8.7,director:'罗伯·莱纳',region:'intl',synopsis:'两个将死之人的遗愿清单，笑到哭'},
+{name:'天使爱美丽',year:2001,genre:'喜剧,爱情',rating:8.7,director:'让-皮埃尔·热内',region:'intl',synopsis:'巴黎女孩用小小的恶作剧让世界变好'},
+{name:'超能陆战队',year:2014,genre:'动画,科幻',rating:8.7,director:'唐·霍尔',region:'intl',synopsis:'大白，你的个人健康伴侣'},
+{name:'头脑特工队',year:2015,genre:'动画,冒险',rating:8.7,director:'彼特·道格特',region:'intl',synopsis:'五个情绪小人操控大脑总部'},
+{name:'神偷奶爸',year:2010,genre:'动画,喜剧',rating:8.6,director:'皮埃尔·柯芬',region:'intl',synopsis:'大坏蛋格鲁与三个小萝莉'},
+{name:'浪浪山小妖怪',year:2025,genre:'动画,奇幻',rating:8.6,director:'陈廖宇',region:'cn',synopsis:'小猪妖的浪浪山奇遇'},
+{name:'长安三万里',year:2023,genre:'动画,历史',rating:8.3,director:'谢君伟/邹靖',region:'cn',synopsis:'盛唐诗人的长安，诗在，长安就在'},
+{name:'流浪地球2',year:2023,genre:'科幻,冒险',rating:8.3,director:'郭帆',region:'cn',synopsis:'月球危机、数字生命、人类最后的抉择'},
+{name:'功夫熊猫',year:2008,genre:'动画,动作',rating:8.2,director:'马克·奥斯本',region:'intl',synopsis:'面条鹅的胖儿子成为神龙大侠'},
+{name:'死无对证',year:2019,genre:'悬疑,犯罪',rating:7.9,director:'斯蒂法诺·摩尔蒂尼',region:'intl',synopsis:'真相如俄罗斯套娃，反转再反转'},
+{name:'雄狮少年',year:2021,genre:'动画,运动',rating:8.0,director:'孙海鹏',region:'cn',synopsis:'留守少年的舞狮梦，咸鱼也要有梦想'},
+{name:'夏洛特烦恼',year:2015,genre:'喜剧',rating:7.3,director:'闫非/彭大魔',region:'cn',synopsis:'穿越回1997发现最珍贵的就在身边'},
+{name:'飞驰人生',year:2019,genre:'喜剧,运动',rating:7.7,director:'韩寒',region:'cn',synopsis:'过气赛车手的复出之路'},
+{name:'飞驰人生2',year:2023,genre:'喜剧,运动',rating:7.1,director:'韩寒',region:'cn',synopsis:'老将再战巴音布鲁克'},
+{name:'你好，李焕英',year:2021,genre:'喜剧,奇幻',rating:7.7,director:'贾玲',region:'cn',synopsis:'妈妈也穿越了，只为再见女儿一面'},
+{name:'唐人街探案',year:2015,genre:'喜剧,悬疑',rating:7.7,director:'陈思诚',region:'cn',synopsis:'曼谷密室杀人案'},
+{name:'一条狗的使命',year:2017,genre:'剧情,冒险',rating:7.7,director:'拉斯·霍尔斯道姆',region:'intl',synopsis:'狗狗轮回四世只为再找到你'},
+{name:'憨豆特工',year:2003,genre:'喜剧,动作',rating:7.7,director:'彼得·休伊特',region:'intl',synopsis:'最笨的特工最好的运气'},
+{name:'死侍2',year:2018,genre:'动作,喜剧',rating:7.7,director:'大卫·雷奇',region:'intl',synopsis:'嘴炮之王的暴力美学'},
+{name:'侏罗纪世界',year:2015,genre:'科幻,冒险',rating:7.7,director:'科林·特雷沃罗',region:'intl',synopsis:'暴虐霸王龙失控，侏罗纪公园重启'},
+{name:'律政俏佳人',year:2001,genre:'喜剧,爱情',rating:7.7,director:'罗伯特·卢克提克',region:'intl',synopsis:'金发粉裙也能打赢哈佛法学院'},
+{name:'悬崖之上',year:2021,genre:'剧情,悬疑',rating:7.6,director:'张艺谋',region:'cn',synopsis:'雪原上的暗战，每一步都走在悬崖边'},
+{name:'海王',year:2018,genre:'动作,奇幻',rating:7.6,director:'温子仁',region:'intl',synopsis:'亚特兰蒂斯混血王子的七海之旅'},
+{name:'我和我的祖国',year:2019,genre:'剧情,历史',rating:7.6,director:'陈凯歌 等',region:'cn',synopsis:'七个普通人视角串起七十年家国记忆'},
+{name:'送你一朵小红花',year:2020,genre:'剧情,温情',rating:7.5,director:'韩延',region:'cn',synopsis:'送你一朵小红花，奖励你主动拥抱生活'},
+{name:'普罗米修斯',year:2012,genre:'科幻,惊悚',rating:7.5,director:'雷德利·斯科特',region:'intl',synopsis:'人类寻找造物主，却发现更黑暗的真相'},
+{name:'毒舌律师',year:2023,genre:'剧情,律政',rating:7.5,director:'吴炜伦',region:'cn',synopsis:'毒舌律师用法律为弱者撑腰'},
+{name:'疯狂动物城2',year:2024,genre:'动画,喜剧',rating:7.5,director:'拜恩·霍华德',region:'intl',synopsis:'朱迪和尼克再破奇案'},
+{name:'人在囧途之泰囧',year:2012,genre:'喜剧',rating:7.5,director:'徐峥',region:'cn',synopsis:'泰国囧途三人组'},
+{name:'帕丁顿熊',year:2014,genre:'喜剧,家庭',rating:7.8,director:'保罗·金',region:'intl',synopsis:'秘鲁小熊在伦敦找到家'},
+{name:'帕丁顿熊2',year:2017,genre:'喜剧,家庭',rating:8.0,director:'保罗·金',region:'intl',synopsis:'帕丁顿入狱，越狱只为证明清白'},
+{name:'捉妖记',year:2015,genre:'奇幻,喜剧',rating:6.8,director:'许诚毅',region:'cn',synopsis:'人妖共存世界的萌妖胡巴'},
+{name:'花束般的恋爱',year:2021,genre:'剧情,爱情',rating:8.0,director:'土井裕泰',region:'intl',synopsis:'100%合拍的两个人，最后还是散了'},
+{name:'滚蛋吧，肿瘤君',year:2015,genre:'剧情,喜剧',rating:7.4,director:'韩延',region:'cn',synopsis:'用漫画对抗癌症，笑着告别'},
+{name:'铃芽之旅',year:2023,genre:'动画,奇幻',rating:7.4,director:'新海诚',region:'intl',synopsis:'关门少女的日本列岛之旅'},
+{name:'举起手来',year:2005,genre:'喜剧,战争',rating:7.4,director:'冯小宁',region:'cn',synopsis:'抗战喜剧，笑声里的民族记忆'},
+{name:'云边有个小卖部',year:2024,genre:'剧情,温情',rating:7.2,director:'张吃鱼',region:'cn',synopsis:'小镇烟火气中的温暖'},
+{name:'保你平安',year:2023,genre:'喜剧,剧情',rating:7.2,director:'大鹏',region:'cn',synopsis:'造谣一张嘴辟谣跑断腿'},
+{name:'西虹市首富',year:2018,genre:'喜剧',rating:6.5,director:'闫非/彭大魔',region:'cn',synopsis:'一个月花光十亿的烦恼'},
+{name:'银河补习班',year:2019,genre:'剧情',rating:6.2,director:'邓超/俞白眉',region:'cn',synopsis:'反传统教育，做你想做的人'},
+{name:'消失的她',year:2023,genre:'悬疑,犯罪',rating:6.5,director:'崔睿/刘翔',region:'cn',synopsis:'东南亚度假，妻子离奇失踪'},
+];
+
+// ===== QUOTES DATA =====
+const quotes=[
+  {movie:'肖申克的救赎',emoji:'🔦',quote:'恐惧能困住你，希望可以让你自由。',scene:'安迪在雷雨中张开双臂，终于自由',rating:9.7,year:1994,poster:'posters/肖申克的救赎.jpg'},
+  {movie:'霸王别姬',emoji:'🎭',quote:'说好了一辈子，少一年、少一天、少一个时辰都不算一辈子。',scene:'蝶衣在台上以虞姬之剑了断一生',rating:9.6,year:1993,poster:'posters/霸王别姬.jpg'},
+  {movie:'阿甘正传',emoji:'🏃',quote:'生活就像一盒巧克力，你永远不知道下一颗是什么味道。',scene:'阿甘坐在长椅上讲故事',rating:9.5,year:1994,poster:'posters/阿甘正传.jpg'},
+  {movie:'泰坦尼克号',emoji:'🚢',quote:'你要答应我，你会活下去，不会放弃，无论发生什么。',scene:'杰克沉入冰冷的海水',rating:9.5,year:1997,poster:'posters/泰坦尼克号.jpg'},
+  {movie:'千与千寻',emoji:'🐉',quote:'不管前方的路有多苦，只要走的方向正确，都比站在原地更接近幸福。',scene:'千寻在花丛中奔跑',rating:9.4,year:2001,poster:'posters/千与千寻.jpg'},
+  {movie:'星际穿越',emoji:'🌌',quote:'爱是唯一能够超越时间与空间的东西。',scene:'库珀在五维空间推动书架上的书',rating:9.4,year:2014,poster:'posters/星际穿越.jpg'},
+  {movie:'忠犬八公的故事',emoji:'🐕',quote:'等一个人，用一辈子也不算长。',scene:'八公在雪中守候车站',rating:9.4,year:2009,poster:'posters/忠犬八公的故事.jpg'},
+  {movie:'盗梦空间',emoji:'🌀',quote:'你在等一班火车，你会去哪里并不重要，重要的是你在火车上。',scene:'柯布与梅尔在limbo中对视',rating:9.3,year:2010,poster:'posters/盗梦空间.jpg'},
+  {movie:'楚门的世界',emoji:'🌊',quote:'假如再也见不到你，祝你早安、午安、晚安。',scene:'楚门向镜头鞠躬，推开那扇门',rating:9.3,year:1998,poster:'posters/楚门的世界.jpg'},
+  {movie:'放牛班的春天',emoji:'🎵',quote:'凡事都有可能，永远别说永远。',scene:'莫翰奇独唱《夜的月光》，天籁童声',rating:9.3,year:2004,poster:'posters/放牛班的春天.jpg'},
+  {movie:'飞屋环游记',emoji:'🎈',quote:'冒险就在那里，走出去就能找到。',scene:'78岁卡尔带着气球屋飞上天',rating:9.1,year:2009,poster:'posters/飞屋环游记.jpg'},
+  {movie:'怦然心动',emoji:'🌳',quote:'有些人浅薄，有些人金玉其外败絮其中，但总有一天你会遇到一个如彩虹般绚烂的人。',scene:'朱莉爬上梧桐树看世界',rating:9.1,year:2010,poster:'posters/怦然心动.jpg'},
+  {movie:'死亡诗社',emoji:'📜',quote:'抓住今天，让你的生命不同寻常。',scene:'学生们站上课桌喊"哦，船长，我的船长"',rating:9.1,year:1989,poster:'posters/死亡诗社.jpg'},
+  {movie:'寻梦环游记',emoji:'🎸',quote:'记住我，虽然我不得不说再见。',scene:'米格尔在亡灵世界为太姥姥弹唱',rating:9.0,year:2017,poster:'posters/寻梦环游记.jpg'},
+  {movie:'三傻大闹宝莱坞',emoji:'📚',quote:'追求卓越，成功自然会追着你跑。',scene:'兰彻在毕业典礼上消失',rating:9.1,year:2009,poster:'posters/三傻大闹宝莱坞.jpg'},
+  {movie:'我不是药神',emoji:'💊',quote:'谁家还没个病人？你能保证一辈子不生病吗？',scene:'老太太握着曹警官的手',rating:9.0,year:2018,poster:'posters/我不是药神.jpg'},
+  {movie:'少年的你',emoji:'☂️',quote:'你保护世界，我保护你。',scene:'小北跟在陈念身后',rating:8.2,year:2019,poster:'posters/少年的你.jpg'},
+  {movie:'哪吒之魔童降世',emoji:'🔥',quote:'我命由我不由天！',scene:'哪吒顶着天劫怒吼',rating:8.4,year:2019,poster:'posters/哪吒之魔童降世.jpg'},
+  {movie:'年会不能停',emoji:'🎤',quote:'我的未来不是梦，但我的现在是个笑话。',scene:'三人组在年会上唱rap揭黑幕',rating:8.2,year:2023,poster:'posters/年会不能停.jpg'},
+  {movie:'送你一朵小红花',emoji:'🌺',quote:'送你一朵小红花，奖励你人生第一次积极主动。',scene:'韦一航在雨中告白',rating:7.5,year:2020,poster:'posters/送你一朵小红花.jpg'},
+];
+
+// ===== SCENE DATA =====
+const scenes=[
+  {movie:'肖申克的救赎',emoji:'🔦',title:'雨夜自由',desc:'安迪用19年凿穿墙壁，在雷雨夜爬过500码粪管，张开双臂迎接太平洋的风。那一刻，自由有了形状。',quote:'有些鸟是关不住的，它们的羽毛太光亮了。',poster:'posters/肖申克的救赎.jpg'},
+  {movie:'霸王别姬',emoji:'🎭',title:'蝶衣自刎',desc:'戏台上，程蝶衣最后一次演绎虞姬。剑光一闪，戏假情真的一生就此落幕。从一而终，不只是戏词。',quote:'说好了一辈子，少一年、少一天、少一个时辰都不算一辈子。',poster:'posters/霸王别姬.jpg'},
+  {movie:'千与千寻',emoji:'🚂',title:'海上列车',desc:'千寻和无脸男坐在去往钱婆婆家的列车上，窗外是无边的大海。车厢安静，只有水声。成长就是一趟只有去程的列车。',quote:'不要怕，我在你身边。',poster:'posters/千与千寻.jpg'},
+  {movie:'星际穿越',emoji:'📚',title:'书架对话',desc:'库珀在五维空间里，隔着书架看着女儿。他推落书本，用莫尔斯码传递黑洞数据。爱是唯一能穿越时空的语言。',quote:'墨菲定律不是说坏事一定发生——而是可能发生的事，终会发生。',poster:'posters/星际穿越.jpg'},
+  {movie:'忠犬八公的故事',emoji:'🐕',title:'九年守候',desc:'教授去世后的每一天，八公都准时出现在车站。春去秋来，九年如一日。它不懂死亡，只懂得等。',quote:'等你回来，是我一生的功课。',poster:'posters/忠犬八公的故事.jpg'},
+  {movie:'泰坦尼克号',emoji:'🚢',title:'船头飞翔',desc:'杰克搂着露丝站在船头，夕阳把海面染成金色。"我在飞！"她张开双臂，不知道身后就是冰山。最美的瞬间总是离毁灭最近。',quote:'你要活下去，生好多孩子，看着他们长大。',poster:'posters/泰坦尼克号.jpg'},
+  {movie:'楚门的世界',emoji:'🌊',title:'推开那扇门',desc:'楚门驾船撞向天幕，发现整片海只是一个摄影棚。他鞠躬，微笑，走进黑暗中的真实。',quote:'假如再也见不到你，祝你早安、午安、晚安。',poster:'posters/楚门的世界.jpg'},
+  {movie:'放牛班的春天',emoji:'🎵',title:'纸飞机送别',desc:'马修被校长赶走时，从窗户飞出无数纸飞机。每架飞机上都是孩子的字迹。天籁童声从窗口飘来，那是最温柔的告别。',quote:'凡事都有可能，永远别说永远。',poster:'posters/放牛班的春天.jpg'},
+  {movie:'盗梦空间',emoji:'🌀',title:'旋转陀螺',desc:'柯布终于回到家，看到孩子们的笑脸。桌上陀螺还在转——但镜头在倒下之前切黑。是梦是醒？他自己也不在乎了。',quote:'你在等一班火车，目的地并不重要。',poster:'posters/盗梦空间.jpg'},
+  {movie:'怦然心动',emoji:'🌳',title:'梧桐树上',desc:'朱莉爬上梧桐树最高处，看见了从未见过的风景。"从那以后，我就再也没看这世界一样过。"那一刻，整条街都在发光。',quote:'有些人浅薄，有些人金玉其外败絮其中，但总有一天你会遇到一个如彩虹般绚烂的人。',poster:'posters/怦然心动.jpg'},
+  {movie:'哪吒之魔童降世',emoji:'🔥',title:'逆天改命',desc:'哪吒顶着天劫，浑身火焰，六臂齐出。他不再是那个被所有人害怕的魔丸，他选择做自己想成为的人。',quote:'我命由我不由天！是魔是仙，我自己说了算！',poster:'posters/哪吒之魔童降世.jpg'},
+  {movie:'死亡诗社',emoji:'📜',title:'哦船长',desc:'基汀老师离开教室时，一个接一个学生站上课桌。"哦，船长，我的船长！"他们的声音压过了校长的怒吼。',quote:'抓住今天，让你的生命不同寻常。',poster:'posters/死亡诗社.jpg'},
+];
+
+// ===== QUIZ DATA =====
+const quizSteps=[
+  {q:'此刻的你，更想…',opts:[
+    {text:'🌀 一个人静一静',next:1},
+    {text:'🫂 找人说说话',next:2},
+    {text:'⚡ 来点刺激的',next:3},
+    {text:'🌙 放空发呆',next:4},
+  ]},
+  {q:'一个人静一静的时候，你更想…',opts:[
+    {text:'💧 哭一场',result:'catharsis'},
+    {text:'🧠 想点深刻的',result:'deep'},
+    {text:'🍃 被温暖包裹',result:'warm'},
+  ]},
+  {q:'找人说话，你更需要…',opts:[
+    {text:'😂 一起笑',result:'comedy'},
+    {text:'💕 谈谈感情',result:'love'},
+    {text:'🤝 被理解',result:'friendship'},
+  ]},
+  {q:'来点刺激的，你想要…',opts:[
+    {text:'🔍 烧脑反转',result:'thriller'},
+    {text:'🚀 视觉奇观',result:'scifi'},
+    {text:'💥 热血沸腾',result:'action'},
+  ]},
+  {q:'放空发呆，你适合…',opts:[
+    {text:'🎨 漂亮的画面',result:'visual'},
+    {text:'🎵 好听的配乐',result:'music'},
+    {text:'📖 慢慢讲故事',result:'slow'},
+  ]},
+];
+
+const quizResults={
+  catharsis:{emoji:'💧',title:'你需要一场痛快哭',desc:'有些眼泪不是软弱，是灵魂在呼吸。让这些电影替你哭出来：',movies:['忠犬八公的故事','送你一朵小红花','你好李焕英','一条狗的使命','滚蛋吧肿瘤君']},
+  deep:{emoji:'🧠',title:'你需要想点深刻的',desc:'让这些电影帮你追问那些平时不敢想的问题：',movies:['肖申克的救赎','星际穿越','楚门的世界','何以为家','死亡诗社']},
+  warm:{emoji:'🌸',title:'你需要一个拥抱',desc:'这些电影会像毯子一样把你包裹起来：',movies:['海蒂和爷爷','飞屋环游记','怦然心动','放牛班的春天','机器人总动员']},
+  comedy:{emoji:'😂',title:'你需要笑出声来',desc:'生活够难了，让这些电影替你解压：',movies:['年会不能停','夏洛特烦恼','三傻大闹宝莱坞','帕丁顿熊2','憨豆特工']},
+  love:{emoji:'💕',title:'你需要相信爱情',desc:'不管现状如何，这些电影会让你重新相信：',movies:['怦然心动','泰坦尼克号','花束般的恋爱','蒂凡尼的早餐','你的名字']},
+  friendship:{emoji:'🤝',title:'你需要被理解',desc:'有些电影懂你，就像一个不需要解释的朋友：',movies:['触不可及','放牛班的春天','少年的你','绿皮书','我不是药神']},
+  thriller:{emoji:'🔍',title:'你需要烧脑反转',desc:'这些电影会让你的大脑全速运转：',movies:['盗梦空间','死无对证','七宗罪','寄生虫','蝙蝠侠：黑暗骑士崛起']},
+  scifi:{emoji:'🚀',title:'你需要视觉奇观',desc:'打开这些电影，让想象力爆炸：',movies:['星际穿越','流浪地球2','普罗米修斯','机器人总动员','盗梦空间']},
+  action:{emoji:'💥',title:'你需要热血沸腾',desc:'这些电影会让你肾上腺素飙升：',movies:['摔跤吧爸爸','飞驰人生2','周处除三害','海王','封神第一部']},
+  visual:{emoji:'🎨',title:'你需要美到窒息',desc:'这些电影的每一帧都可以当壁纸：',movies:['千与千寻','你的名字','哈尔的移动城堡','本杰明·巴顿奇事','冰雪奇缘']},
+  music:{emoji:'🎵',title:'你需要耳朵怀孕',desc:'这些电影的原声足以治愈一切：',movies:['放牛班的春天','寻梦环游记','海上钢琴师','冰雪奇缘','放牛班的春天']},
+  slow:{emoji:'📖',title:'你需要慢慢来',desc:'这些电影不急，就像你此刻也不想急：',movies:['天使爱美丽','海蒂和爷爷','一个叫欧维的男人决定去死','花束般的恋爱','蒂凡尼的早餐']},
+};
+
+// ===== INIT =====
+!function(){const c=document.getElementById('stars');for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2+.5;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*5}s`;c.appendChild(s)}}();
+!function(){const names=['肖申克的救赎','霸王别姬','阿甘正传','泰坦尼克号','千与千寻','星际穿越','忠犬八公','盗梦空间','楚门的世界','放牛班的春天','当幸福来敲门','末代皇帝','何以为家','海蒂和爷爷','摔跤吧爸爸','我不是药神','怦然心动','死亡诗社','哪吒之魔童降世','年会不能停','少年的你','好东西','你的名字','三傻大闹宝莱坞','寄生虫','飞屋环游记','寻梦环游记','疯狂动物城'];const t=document.getElementById('tape');const d=[...names,...names];d.forEach(n=>{t.innerHTML+=`<span class="tape-item">${n}</span>`})}();
+
+// Reveal
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ===== MOOD MAP =====
+const moods=[
+  {emoji:'😂',name:'想笑',count:37,color:'#fbbf24',genre:'喜剧',movies:['西虹市首富','年会不能停','夏洛特烦恼','羞羞的铁拳','人在囧途之泰囧','憨豆特工','死侍2','律政俏佳人','帕丁顿熊','帕丁顿熊2']},
+  {emoji:'😭',name:'想哭',count:46,color:'#38bdf8',genre:'剧情',movies:['肖申克的救赎','霸王别姬','忠犬八公','当幸福来敲门','何以为家','我不是药神','海蒂和爷爷','送你一朵小红花']},
+  {emoji:'🤯',name:'想震撼',count:16,color:'#a78bfa',genre:'奇幻',movies:['千与千寻','哈尔的移动城堡','哪吒之魔童降世','冰雪奇缘','大鱼海棠','罗小黑战记','哈利波特','神奇动物在哪里']},
+  {emoji:'🧠',name:'想烧脑',count:7,color:'#fb923c',genre:'悬疑',movies:['盗梦空间','死无对证','七宗罪','消失的她','唐人街探案','悬崖之上','寄生虫']},
+  {emoji:'❤️',name:'想恋爱',count:12,color:'#f472b6',genre:'爱情',movies:['怦然心动','泰坦尼克号','花束般的恋爱','蒂凡尼的早餐','你的名字','天使爱美丽','从你的全世界路过']},
+  {emoji:'🚀',name:'想冒险',count:9,color:'#34d399',genre:'冒险',movies:['流浪地球','星际穿越','飞屋环游记','侏罗纪世界','一条狗的回家路','海底总动员']},
+  {emoji:'🎵',name:'想治愈',count:5,color:'#e879f9',genre:'温情',movies:['放牛班的春天','寻梦环游记','送你一朵小红花','滚蛋吧肿瘤君','云边有个小卖部']},
+  {emoji:'💪',name:'想燃',count:4,color:'#f97316',genre:'运动',movies:['摔跤吧爸爸','飞驰人生','雄狮少年','飞驰人生2']},
+];
+let activeMood=null;
+const maxMood=Math.max(...moods.map(m=>m.count));
+const mg=document.getElementById('moodGrid');
+moods.forEach((m,i)=>{
+  const pct=((m.count/101)*100).toFixed(0);
+  const barW=((m.count/maxMood)*100).toFixed(0);
+  mg.innerHTML+=`
+    <div class="mood-card" onclick="selectMood(${i})">
+      <span class="emoji">${m.emoji}</span>
+      <div class="name">${m.name}</div>
+      <div class="count" style="color:${m.color}">${m.count}</div>
+      <div class="pct">${pct}% 片单</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:${m.color}"></div></div>
+    </div>`;
+});
+
+function selectMood(i){
+  const m=moods[i];
+  document.querySelectorAll('.mood-card').forEach((c,j)=>{c.classList.toggle('active',j===i)});
+  const r=document.getElementById('moodResult');
+  r.innerHTML=`<h3>${m.emoji} 「想${m.name}」片单推荐</h3><div class="mood-movies">${m.movies.map(n=>`<span class="mood-movie">${n}</span>`).join('')}</div>`;
+  r.classList.add('show');
+}
+
+// ===== QUOTES CAROUSEL =====
+let currentQuote=0;
+const qc=document.getElementById('quoteCarousel');
+qc.innerHTML=quotes.map((q,i)=>`
+  <div class="quote-card ${i===0?'active':''}" data-qi="${i}">
+    <div class="quote-left">
+      <div class="quote-movie-poster"><img src="${q.poster}" alt="${q.movie}" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=font-size:48px>${q.emoji}</span>'"><div class="poster-overlay">${q.rating}</div></div>
+    </div>
+    <div class="quote-right">
+      <div class="quote-mark">"</div>
+      <div class="quote-text">${q.quote}</div>
+      <div class="quote-movie-name">《${q.movie}》</div>
+      <div class="quote-movie-meta">${q.year} · ${q.scene}</div>
+    </div>
+  </div>
+`).join('')+`
+<div class="quote-nav">
+  <button class="quote-btn" onclick="prevQuote()">←</button>
+  <div class="quote-dots">${quotes.map((_,i)=>`<span class="quote-dot ${i===0?'active':''}" onclick="goQuote(${i})"></span>`).join('')}</div>
+  <button class="quote-btn" onclick="nextQuote()">→</button>
+</div>`;
+
+function showQuote(i){
+  currentQuote=i;
+  document.querySelectorAll('.quote-card').forEach((c,j)=>{c.classList.toggle('active',j===i)});
+  document.querySelectorAll('.quote-dot').forEach((d,j)=>{d.classList.toggle('active',j===i)});
+}
+function nextQuote(){showQuote((currentQuote+1)%quotes.length)}
+function prevQuote(){showQuote((currentQuote-1+quotes.length)%quotes.length)}
+function goQuote(i){showQuote(i)}
+// Auto-advance
+let quoteTimer=setInterval(nextQuote,6000);
+qc.addEventListener('mouseenter',()=>clearInterval(quoteTimer));
+qc.addEventListener('mouseleave',()=>{quoteTimer=setInterval(nextQuote,6000)});
+
+// ===== SCENES =====
+const sg=document.getElementById('sceneGrid');
+scenes.forEach((s,i)=>{
+  sg.innerHTML+=`
+    <div class="scene-card" id="scene${i}" onclick="toggleScene(${i})">
+      <div class="scene-bg" style="background-image:url('${s.poster}')"></div>
+      <div class="scene-content">
+        <div class="scene-header">
+          <div class="scene-poster"><img src="${s.poster}" alt="${s.movie}" onerror="this.style.display='none';this.parentNode.innerHTML='${s.emoji}'"></div>
+          <div><div class="scene-movie">《${s.movie}》</div><div class="scene-year">${scenes[i].quote?'经典场景':''}</div></div>
+        </div>
+        <div class="scene-body">
+          <div class="scene-title">${s.title}</div>
+          <div class="scene-desc">${s.desc}</div>
+        </div>
+        <div class="scene-quote">"${s.quote}"</div>
+        <div class="scene-toggle">点击展开经典台词 ▾</div>
+      </div>
+    </div>`;
+});
+function toggleScene(i){
+  const card=document.getElementById('scene'+i);
+  card.classList.toggle('expanded');
+  const toggle=card.querySelector('.scene-toggle');
+  toggle.textContent=card.classList.contains('expanded')?'收起 ▴':'点击展开经典台词 ▾';
+}
+
+// ===== QUIZ =====
+let quizStep=0;
+let quizPath=[];
+const quizEl=document.getElementById('quizContainer');
+
+function renderQuiz(){
+  if(typeof quizStep==='string'){
+    // Show result
+    const r=quizResults[quizStep];
+    quizEl.innerHTML=`
+      <div class="quiz-result show">
+        <div class="quiz-result-emoji">${r.emoji}</div>
+        <div class="quiz-result-text">${r.title}</div>
+        <div class="quiz-result-desc">${r.desc}</div>
+        <div class="quiz-result-movies">${r.movies.map(m=>`<span class="mood-movie">${m}</span>`).join('')}</div>
+        <button class="quiz-restart" onclick="restartQuiz()">再来一次 →</button>
+      </div>`;
+    return;
+  }
+  const step=quizSteps[quizStep];
+  quizEl.innerHTML=`
+    <div class="quiz-question">${step.q}</div>
+    <div class="quiz-options">${step.opts.map((o,i)=>`<div class="quiz-opt" onclick="quizAnswer(${i})">${o.text}</div>`).join('')}</div>`;
+}
+
+function quizAnswer(i){
+  const step=quizSteps[quizStep];
+  const chosen=step.opts[i];
+  if(chosen.result){
+    quizStep=chosen.result;
+  }else{
+    quizStep=chosen.next;
+  }
+  renderQuiz();
+}
+
+function restartQuiz(){
+  quizStep=0;
+  renderQuiz();
+}
+renderQuiz();
+
+// ===== CHARTS =====
+const radar=echarts.init(document.getElementById('radarChart'));
+radar.setOption({color:['#ff6b6b'],tooltip:{},radar:{indicator:[{name:'剧情',max:50},{name:'喜剧',max:40},{name:'动画',max:20},{name:'奇幻',max:20},{name:'爱情',max:15},{name:'科幻',max:15},{name:'冒险',max:12},{name:'悬疑',max:10},{name:'动作',max:8},{name:'温情',max:8}],shape:'circle',splitNumber:4,axisName:{color:'#7a7a96',fontSize:11},splitLine:{lineStyle:{color:'rgba(255,255,255,.05)'}},splitArea:{show:true,areaStyle:{color:['rgba(255,255,255,.01)','rgba(255,255,255,.03)']}},axisLine:{lineStyle:{color:'rgba(255,255,255,.06)'}}},series:[{type:'radar',data:[{value:[46,37,17,16,12,11,9,7,6,5],areaStyle:{color:new echarts.graphic.RadialGradient(.5,.5,1,[{offset:0,color:'rgba(255,107,107,.4)'},{offset:1,color:'rgba(255,107,107,.05)'}])},lineStyle:{color:'#ff6b6b',width:2},itemStyle:{color:'#ff6b6b',borderColor:'#fff',borderWidth:1},symbol:'circle',symbolSize:6}]}]});
+
+const rating=echarts.init(document.getElementById('ratingChart'));
+rating.setOption({tooltip:{trigger:'axis'},grid:{left:50,right:20,top:20,bottom:40},xAxis:{type:'category',data:['9.0+','8.0-8.9','7.0-7.9','6.0-6.9','<6.0'],axisLine:{lineStyle:{color:'rgba(255,255,255,.08)'}},axisLabel:{color:'#7a7a96'}},yAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:'rgba(255,255,255,.04)'}},axisLabel:{color:'#555'}},series:[{type:'bar',data:[{value:31,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#ff6b6b'},{offset:1,color:'rgba(255,107,107,.15)'}])}},{value:24,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#fbbf24'},{offset:1,color:'rgba(251,191,36,.15)'}])}},{value:26,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#38bdf8'},{offset:1,color:'rgba(56,189,248,.15)'}])}},{value:14,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#a78bfa'},{offset:1,color:'rgba(167,139,250,.15)'}])}},{value:4,itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#6b7280'},{offset:1,color:'rgba(107,114,128,.15)'}])}}],barWidth:'55%',label:{show:true,position:'top',color:'#fbbf24',fontWeight:700,fontSize:14},itemStyle:{borderRadius:[8,8,0,0]}}]});
+
+const tl=echarts.init(document.getElementById('timelineChart'));
+tl.setOption({tooltip:{trigger:'axis'},grid:{left:45,right:15,top:15,bottom:35},xAxis:{type:'category',data:['1960s','1980s','1990s','2000s','2010s','2020s'],axisLine:{lineStyle:{color:'rgba(255,255,255,.08)'}},axisLabel:{color:'#7a7a96'}},yAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:'rgba(255,255,255,.04)'}},axisLabel:{color:'#555'}},series:[{type:'bar',data:[1,2,7,18,51,22],barWidth:'50%',label:{show:true,position:'top',color:'#fbbf24',fontWeight:700,fontSize:13},itemStyle:{color:function(p){const cs=[['#6b7280','#374151'],['#6b7280','#374151'],['#38bdf8','#1e40af'],['#34d399','#065f46'],['#ff6b6b','#9f1239'],['#a78bfa','#5b21b6']];return new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:cs[p.dataIndex][0]},{offset:1,color:cs[p.dataIndex][1]}])},borderRadius:[6,6,0,0]}}]});
+
+const rg=echarts.init(document.getElementById('regionChart'));
+rg.setOption({tooltip:{trigger:'item',formatter:'{b}: {c}部 ({d}%)'},series:[{type:'pie',radius:['48%','78%'],center:['50%','50%'],avoidLabelOverlap:true,itemStyle:{borderRadius:10,borderColor:'#07080f',borderWidth:3},label:{color:'#7a7a96',fontSize:13,formatter:'{b}\n{d}%'},labelLine:{lineStyle:{color:'rgba(255,255,255,.15)'}},emphasis:{label:{fontSize:15,fontWeight:'bold',color:'#e8e8ef'}},data:[{value:71,name:'华语电影',itemStyle:{color:new echarts.graphic.LinearGradient(0,0,1,1,[{offset:0,color:'#ff6b6b'},{offset:1,color:'#fbbf24'}])}},{value:30,name:'国际电影',itemStyle:{color:new echarts.graphic.LinearGradient(0,0,1,1,[{offset:0,color:'#38bdf8'},{offset:1,color:'#a78bfa'}])}}]}]});
+
+// ===== POSTER MAP (must be before Top10) =====
+const posterMap={};
+quotes.forEach(q=>{posterMap[q.movie]=q.poster});
+scenes.forEach(s=>{posterMap[s.movie]=s.poster});
+
+// ===== TOP 10 =====
+const top10=[
+  {name:'肖申克的救赎',year:1994,rating:9.7,genre:'剧情',dir:'弗兰克·德拉邦特'},
+  {name:'霸王别姬',year:1993,rating:9.6,genre:'剧情/爱情',dir:'陈凯歌'},
+  {name:'阿甘正传',year:1994,rating:9.5,genre:'剧情/爱情',dir:'罗伯特·泽米吉斯'},
+  {name:'泰坦尼克号',year:1997,rating:9.5,genre:'剧情/爱情',dir:'詹姆斯·卡梅隆'},
+  {name:'千与千寻',year:2001,rating:9.4,genre:'动画/奇幻',dir:'宫崎骏'},
+  {name:'星际穿越',year:2014,rating:9.4,genre:'科幻/剧情',dir:'克里斯托弗·诺兰'},
+  {name:'忠犬八公的故事',year:2009,rating:9.4,genre:'剧情',dir:'莱塞·霍尔斯道姆'},
+  {name:'盗梦空间',year:2010,rating:9.3,genre:'科幻/悬疑',dir:'克里斯托弗·诺兰'},
+  {name:'楚门的世界',year:1998,rating:9.3,genre:'剧情/喜剧',dir:'彼得·威尔'},
+  {name:'放牛班的春天',year:2004,rating:9.3,genre:'剧情/音乐',dir:'克里斯托夫·巴拉蒂'},
+];
+const tl0=document.getElementById('topLeft'),tr0=document.getElementById('topRight');
+top10.forEach((m,i)=>{
+  const cls=i===0?'g1':i===1?'g2':i===2?'g3':'g0';
+  const poster=posterMap[m.name];
+  const posterThumb=poster?`<div style="width:36px;height:50px;border-radius:6px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3)"><img src="${poster}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.style.display='none'"></div>`:'';
+  const html=`<div class="rank-item"><div class="rank-badge ${cls}">${i+1}</div>${posterThumb}<div class="rank-info"><div class="rank-name">${m.name}</div><div class="rank-meta">${m.year} · ${m.genre} · ${m.dir}</div></div><div class="rank-score">${m.rating}</div></div>`;
+  if(i<5)tl0.innerHTML+=html;else tr0.innerHTML+=html;
+});
+
+// ===== DIRECTORS =====
+const dirs=[
+  {name:'陈思诚',count:4,mv:'唐探宇宙'},
+  {name:'诺兰',count:3,mv:'盗梦+星际+黑暗骑士'},
+  {name:'宫崎骏',count:3,mv:'千与千寻+哈尔+你想活出'},
+  {name:'韩寒',count:3,mv:'飞驰人生系列'},
+  {name:'张艺谋',count:2,mv:'悬崖之上+满江红'},
+  {name:'郭帆',count:2,mv:'流浪地球1-2'},
+  {name:'大卫·芬奇',count:2,mv:'社交网络+本杰明'},
+  {name:'贾玲',count:2,mv:'李焕英+热辣滚烫'},
+  {name:'韩延',count:2,mv:'小红花+肿瘤君'},
+  {name:'新海诚',count:2,mv:'你的名字+铃芽之旅'},
+];
+const maxD=Math.max(...dirs.map(d=>d.count));
+const dg=document.getElementById('dirGrid');
+const dcols=['#ff6b6b','#38bdf8','#34d399','#fbbf24','#a78bfa','#f472b6','#fb923c','#6ee7b7','#fcd34d','#e879f9'];
+dirs.forEach((d,i)=>{
+  dg.innerHTML+=`<div class="dir-card"><div class="dir-name" style="color:${dcols[i]}">${d.name}</div><div class="dir-sub">${d.mv}</div><div class="dir-bar"><div class="dir-fill" style="width:${(d.count/maxD*100)}%;background:${dcols[i]}"></div></div></div>`;
+});
+
+// ===== EXPLORER =====
+let currentFilter='all';
+const eg=document.getElementById('explorerGrid');
+
+function renderExplorer(list){
+  eg.innerHTML=list.map(m=>`
+    <div class="movie-tile" onclick="openMovieModal('${m.name.replace(/'/g,"\\'")}')">
+      <div class="name">${m.name}</div>
+      <div class="meta">${m.year} · ${m.director}</div>
+      <div class="rating" style="color:${m.rating>=9?'#fbbf24':m.rating>=8?'#34d399':m.rating>=7?'#38bdf8':'#a78bfa'}">${m.rating||'—'}</div>
+      <div>${m.genre.split(',').map(g=>`<span class="genre-tag">${g}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function filterMovies(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  let list=allMovies;
+  if(currentFilter==='9+')list=list.filter(m=>m.rating>=9);
+  else if(currentFilter!=='all')list=list.filter(m=>m.genre.includes(currentFilter));
+  if(q)list=list.filter(m=>m.name.toLowerCase().includes(q)||m.director.toLowerCase().includes(q)||m.genre.toLowerCase().includes(q));
+  renderExplorer(list);
+}
+
+function setFilter(btn,f){
+  currentFilter=f;
+  document.querySelectorAll('.explorer-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterMovies();
+}
+
+renderExplorer(allMovies);
+
+// ===== MOVIE MODAL =====
+
+function openMovieModal(name){
+  const m=allMovies.find(x=>x.name===name);
+  if(!m)return;
+  const q=quotes.find(x=>x.movie===name);
+  const emoji=q?q.emoji:'🎬';
+  const poster=posterMap[name];
+  const posterHtml=poster?`<div style="text-align:center;margin-bottom:16px"><img src="${poster}" alt="${m.name}" style="width:140px;height:196px;object-fit:cover;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5)" onerror="this.style.display='none'"></div>`:`<div class="modal-emoji">${emoji}</div>`;
+  document.getElementById('modalContent').innerHTML=`
+    ${posterHtml}
+    <div class="modal-name">《${m.name}》</div>
+    <div class="modal-meta">${m.year} · ${m.genre} · ${m.director} · 豆瓣 ${m.rating||'—'}</div>
+    <div class="modal-synopsis">${m.synopsis}</div>
+    ${q?`<div class="modal-quote">"${q.quote}"<br><span style="font-size:12px;color:var(--dim);font-style:normal">—— ${q.scene}</span></div>`:''}
+  `;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+
+// ===== FACTS =====
+const facts=[
+  {icon:'🏆',label:'9分以上比例',value:'30.7%',desc:'近1/3的片单评分9.0+，品味相当严苛'},
+  {icon:'🎬',label:'最爱的年代',value:'2010s',desc:'51部来自2010s，那是你的黄金年代'},
+  {icon:'🇨🇳',label:'华语偏好',value:'70%',desc:'71部华语 vs 30部国际，根在东方'},
+  {icon:'🎨',label:'动画情怀',value:'17部',desc:'动画占比17%，心里住着个孩子'},
+  {icon:'⭐',label:'评分跨度',value:'5.3→9.7',desc:'从深夜食堂到肖申克，跨度4.4分'},
+  {icon:'🔥',label:'2019年之最',value:'11部',desc:'2019年你看了最多的电影'},
+  {icon:'🎭',label:'灵魂搭档',value:'陈思诚×4',desc:'追完整唐探宇宙，是真爱了'},
+  {icon:'💫',label:'诺兰浓度',value:'3部',desc:'盗梦+星际+黑暗骑士'},
+  {icon:'🐉',label:'宫崎骏浓度',value:'3部',desc:'千与千寻+哈尔+你想活出'},
+];
+const fg=document.getElementById('factGrid');
+facts.forEach(f=>{fg.innerHTML+=`<div class="fact-card"><span class="fact-icon">${f.icon}</span><div class="fact-label">${f.label}</div><div class="fact-value">${f.value}</div><div class="fact-desc">${f.desc}</div></div>`});
+
+// ===== TAGS =====
+const tags=[
+  {t:'剧情控',c:'#ff6b6b',s:17},{t:'高分鉴赏家',c:'#fbbf24',s:16},{t:'喜剧爱好者',c:'#fbbf24',s:15},
+  {t:'宫崎骏永远的神',c:'#34d399',s:16},{t:'诺兰信徒',c:'#fb923c',s:14},{t:'动画童心未泯',c:'#38bdf8',s:14},
+  {t:'华语主场',c:'#ff6b6b',s:15},{t:'奇幻迷',c:'#a78bfa',s:13},{t:'治愈系',c:'#e879f9',s:13},
+  {t:'悬疑烧脑',c:'#fb923c',s:12},{t:'2010s黄金一代',c:'#34d399',s:14},{t:'爱情理想主义',c:'#f472b6',s:13},
+  {t:'温情动物片',c:'#fda4af',s:12},{t:'品味严苛',c:'#fbbf24',s:15},{t:'追系列选手',c:'#38bdf8',s:12},
+  {t:'陈思诚宇宙',c:'#fb923c',s:12},{t:'韩寒公路片',c:'#34d399',s:12},{t:'科幻冒险家',c:'#38bdf8',s:13},
+];
+const tc=document.getElementById('tagCloud');
+tags.forEach(t=>{tc.innerHTML+=`<span class="tag" style="color:${t.c};border-color:${t.c}25;background:${t.c}0a;font-size:${t.s}px">#${t.t}</span>`});
+
+// Resize
+window.addEventListener('resize',()=>{[radar,rating,tl,rg].forEach(c=>c.resize())});
+</script>
+</body>
+</html>
