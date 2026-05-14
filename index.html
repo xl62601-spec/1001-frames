@@ -285,9 +285,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-seri
   <section class="hero reveal">
     <div class="hero-eyebrow"><span class="dot"></span>CINEMA DNA</div>
     <h1>一千零一帧</h1>
-    <div class="hero-sub">101 部电影，101 段平行人生，一帧一帧拼出你的灵魂</div>
+    <div class="hero-sub">102 部电影，102 段平行人生，一帧一帧拼出你的灵魂</div>
     <div class="stats-row">
-      <div class="stat-chip"><div class="v">101</div><div class="l">已观影</div></div>
+      <div class="stat-chip"><div class="v">102</div><div class="l">已观影</div></div>
       <div class="stat-chip"><div class="v">8.1</div><div class="l">均分</div></div>
       <div class="stat-chip"><div class="v">22</div><div class="l">类型</div></div>
       <div class="stat-chip"><div class="v">9.7</div><div class="l">最高分</div></div>
@@ -404,7 +404,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-seri
     </div>
   </section>
 
-  <div class="foot"><div class="emo">🎬🍿✨</div><div>基于 101 部观影数据生成 · 你的光影宇宙</div></div>
+  <div class="foot"><div class="emo">🎬🍿✨</div><div>基于 102 部观影数据生成 · 你的光影宇宙</div></div>
 </div>
 
 <script>
@@ -450,6 +450,7 @@ const allMovies=[
 {name:'蒂凡尼的早餐',year:1961,genre:'剧情,爱情',rating:8.1,director:'布莱克·爱德华兹',region:'intl',synopsis:'小黑裙与牛角包，霍莉对抗孤独的仪式'},
 {name:'罗小黑战记',year:2019,genre:'动画,奇幻',rating:8.1,director:'MTJJ',region:'cn',synopsis:'猫妖小黑的温暖奇幻冒险'},
 {name:'周处除三害',year:2024,genre:'动作,犯罪',rating:8.1,director:'黄精甫',region:'cn',synopsis:'通缉犯除掉排他前面的两个通缉犯'},
+{name:'食神',year:1996,genre:'喜剧,动作',rating:8.2,director:'周星驰/李力持',region:'cn',synopsis:'跌落神坛的食神，一碗叉烧饭找回初心'},
 {name:'绿皮书',year:2018,genre:'剧情,喜剧',rating:8.9,director:'彼得·法拉利',region:'intl',synopsis:'黑人钢琴家与白人司机的南方公路之旅'},
 {name:'本杰明·巴顿奇事',year:2008,genre:'剧情,奇幻',rating:8.9,director:'大卫·芬奇',region:'intl',synopsis:'逆生长的男人，在时间的河流中逆行去爱'},
 {name:'七宗罪',year:1995,genre:'悬疑,犯罪',rating:8.8,director:'大卫·芬奇',region:'intl',synopsis:'七宗罪七具尸体，最恐怖的是最后一宗'},
@@ -605,7 +606,7 @@ let activeMood=null;
 const maxMood=Math.max(...moods.map(m=>m.count));
 const mg=document.getElementById('moodGrid');
 moods.forEach((m,i)=>{
-  const pct=((m.count/101)*100).toFixed(0);
+  const pct=((m.count/allMovies.length)*100).toFixed(0);
   const barW=((m.count/maxMood)*100).toFixed(0);
   mg.innerHTML+=`
     <div class="mood-card" onclick="selectMood(${i})">
